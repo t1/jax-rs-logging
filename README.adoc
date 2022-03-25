@@ -1,0 +1,6 @@
+= JAX-RS Logging
+
+Log all http traffic coming in or going out with JAX-RS, i.e. request/status, headers and (text)body coming in and returned by a server as well as sending out and receiving back by a client.
+
+It tries to find out what API class was used (or fall back to a generic logger), e.g. when you use MP REST Client, it used the name of the client API interface as the logger.
+On the server, I didn't find a standardized way to find out what API class handles the request; so it works for RestEasy.
