@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
-import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static javax.ws.rs.core.MediaType.CHARSET_PARAMETER;
@@ -45,7 +44,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
             return;
-        LoggingOutputStream loggingOutputStream = (LoggingOutputStream) requestContext.getProperty(LOGGING_OUTPUT_STREAM_PROPERTY);
+        var loggingOutputStream = (LoggingOutputStream) requestContext.getProperty(LOGGING_OUTPUT_STREAM_PROPERTY);
         if (loggingOutputStream != null)
             loggingOutputStream.close();
 
@@ -53,17 +52,17 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         log.debug("<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
         responseContext.getHeaders().forEach((name, values) -> log.debug("<< {}: {}", name, String.join(" ", values)));
         if (log.isDebugEnabled() && responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
-            Charset charset = Charset.forName(responseContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
-            String entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
+            var charset = Charset.forName(responseContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
+            var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
             entity.lines().forEach(line -> log.debug("<< {}", line));
             responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
         }
     }
 
     private Logger getLog(ClientRequestContext requestContext) {
-        Map<String, Object> properties = requestContext.getConfiguration().getProperties();
-        Method method = (Method) properties.get("org.eclipse.microprofile.rest.client.invokedMethod");
-        Class<?> loggerClass = (method == null) ? LoggingClientFilter.class : method.getDeclaringClass();
+        var properties = requestContext.getConfiguration().getProperties();
+        var method = (Method) properties.get("org.eclipse.microprofile.rest.client.invokedMethod");
+        var loggerClass = (method == null) ? LoggingClientFilter.class : method.getDeclaringClass();
         return LoggerFactory.getLogger(loggerClass);
     }
 

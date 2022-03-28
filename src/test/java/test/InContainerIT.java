@@ -23,21 +23,25 @@ class InContainerIT {
     @Container static JeeContainer SERVER = JeeContainer.create()
         .withDeployment(war("ROOT").withClasses(Ping.class, Ping.Payload.class, Ping.Api.class, REST.class),
             addLib("target/jax-rs-logging.jar"))
-        .withLogLevel(Ping.class, DEBUG)
-        .withLogLevel(Ping.Api.class, DEBUG)
+        .withLogLevel(Ping.class, DEBUG) // container/server side
+        .withLogLevel(Ping.Api.class, DEBUG) // client side
         .withMainPortBoundToFixedPort(8080); // makes manual testing and debugging easier
 
     @Test void shouldPing() {
         var webTarget = SERVER.target().path("ping");
         log.debug("ping {}", webTarget.getUri());
 
-        var pong = webTarget.request(APPLICATION_JSON_TYPE).post(json(new Payload("test"))).readEntity(String.class);
+        var pong = webTarget.request(APPLICATION_JSON_TYPE)
+            .header("Authorization", "Basic Zm9vOmJhcg==") // foo:bar
+            .post(json(new Payload("test")))
+            .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
             .hasFollowingMessage("got POST request http://localhost:8080/ping")
             .hasFollowingMessage(">>> Accept: application/json")
+            .hasFollowingMessage(">>> Authorization: <hidden>")
             .hasFollowingMessage(">>> Content-Type: application/json")
             .hasFollowingMessage(">>> {\"payload\":\"test\"}")
             .hasFollowing(LogLine.message("got pinged Ping.Payload(payload=test)").withLevel(INFO).withLogger(Ping.class.getName()))
@@ -45,6 +49,53 @@ class InContainerIT {
             .hasFollowingMessage("<<< Status: 200 OK")
             .hasFollowingMessage("<<< Content-Type: application/json")
             .hasFollowingMessage("<<< {\"payload\":\"pong:test\"}");
+        then(SERVER.getLogs()).doesNotContain("Zm9vOmJhcg==");
+    }
+
+    @Test void shouldLogTheUserNameWhenThePasswordIsLong() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("ping {}", webTarget.getUri());
+
+        var pong = webTarget.request(APPLICATION_JSON_TYPE)
+            .header("Authorization", "Basic Zm9vOjEyMzQ1Njc4OTAxMjM0NTY=") // foo:1234567890123456
+            .post(json(new Payload("test")))
+            .readEntity(String.class);
+
+        log.debug("ping returned {}", pong);
+        then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
+        thenLogsIn(SERVER)
+            .hasFollowingMessage(">>> Authorization: foo:<hidden>");
+    }
+
+    @Test void shouldLogRepeatedHeader() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("ping {}", webTarget.getUri());
+
+        var pong = webTarget.request(APPLICATION_JSON_TYPE)
+            .header("Foo", "bar")
+            .header("foo", "baz")
+            .post(json(new Payload("test")))
+            .readEntity(String.class);
+
+        log.debug("ping returned {}", pong);
+        then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
+        thenLogsIn(SERVER)
+            .hasFollowingMessage(">>> Foo: bar, baz");
+    }
+
+    @Test void shouldLogTrimmedHeader() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("ping {}", webTarget.getUri());
+
+        var pong = webTarget.request(APPLICATION_JSON_TYPE)
+            .header("Foo", " bar ")
+            .post(json(new Payload("test")))
+            .readEntity(String.class);
+
+        log.debug("ping returned {}", pong);
+        then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
+        thenLogsIn(SERVER)
+            .hasFollowingMessage(">>> Foo: bar");
     }
 
     @Test void shouldGetIndirectPing() {
