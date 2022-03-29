@@ -1,0 +1,21 @@
+name: Java CI
+
+on:
+  push:
+  schedule: [ cron: '17 3 * * 5' ] # weekly: At 02:42 on Friday
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 11
+    - uses: actions/cache@v1
+      with:
+        path: ~/.m2/repository
+        key: maven-${{ hashFiles('**/pom.xml') }}
+    - name: Build with Maven
+      run: mvn verify
