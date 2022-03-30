@@ -1,4 +1,6 @@
-= JAX-RS Logging
+= JAX-RS Logging image:https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml/badge.svg[link=https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml]
+
+//image:https://maven-badges.herokuapp.com/maven-central/com.github.t1/jax-rs-logging/badge.svg[link=https://search.maven.org/artifact/com.github.t1/jax-rs-logging]
 
 Log all http traffic coming in or going out with JAX-RS, i.e. request/status, headers and (text)body coming in and returned by a server as well as sending out and receiving back by a client.
 
