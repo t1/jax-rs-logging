@@ -11,6 +11,7 @@ import test.Ping.Payload;
 import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static com.github.t1.testcontainers.tools.DeployableBuilder.war;
 import static javax.ws.rs.client.Entity.json;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.slf4j.event.Level.DEBUG;
@@ -33,7 +34,7 @@ class InContainerIT {
         log.debug("ping {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
-            .header("Authorization", "Basic Zm9vOmJhcg==") // foo:bar
+            .header(AUTHORIZATION, "Basic Zm9vOmJhcg==") // foo:bar
             .post(json(new Payload("test")))
             .readEntity(String.class);
 
@@ -58,7 +59,7 @@ class InContainerIT {
         log.debug("ping {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
-            .header("Authorization", LONG_AUTH)
+            .header(AUTHORIZATION, LONG_AUTH)
             .post(json(new Payload("test")))
             .readEntity(String.class);
 

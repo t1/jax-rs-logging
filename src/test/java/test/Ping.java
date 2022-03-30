@@ -15,6 +15,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @Path("/ping")
@@ -36,7 +37,7 @@ public class Ping {
 
     @RegisterRestClient(baseUri = "http://localhost:8080/ping")
     public interface Api {
-        @POST Payload ping(@HeaderParam("Authorization") String auth, Payload in);
+        @POST Payload ping(@HeaderParam(AUTHORIZATION) String auth, Payload in);
     }
 
     @Inject @RestClient Api api;
