@@ -14,6 +14,8 @@ import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
 
+import static com.github.t1.logging.clientfilter.LoggingTools.merge;
+import static com.github.t1.logging.clientfilter.LoggingTools.safe;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static javax.ws.rs.core.MediaType.CHARSET_PARAMETER;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
@@ -31,8 +33,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         if (!log.isDebugEnabled())
             return;
         log.debug("sending {} request {}", requestContext.getMethod(), requestContext.getUri());
-        requestContext.getStringHeaders().forEach((name, values) -> log.debug(">> {}: {}", name,
-            "Authorization".equals(name) ? "*** censored *** " : String.join(" ", values)));
+        requestContext.getStringHeaders().forEach((name, values) -> log.debug(">> {}: {}", name, safe(name, values)));
         if (requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
             OutputStream stream = new LoggingOutputStream(requestContext.getEntityStream(), ">>", log);
             requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
@@ -50,7 +51,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
 
         log.debug("got response for {} {}", requestContext.getMethod(), requestContext.getUri());
         log.debug("<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
-        responseContext.getHeaders().forEach((name, values) -> log.debug("<< {}: {}", name, String.join(" ", values)));
+        responseContext.getHeaders().forEach((name, values) -> log.debug("<< {}: {}", name, merge(values)));
         if (log.isDebugEnabled() && responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
             var charset = Charset.forName(responseContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
             var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);

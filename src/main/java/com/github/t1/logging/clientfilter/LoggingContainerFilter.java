@@ -13,23 +13,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
 
+import static com.github.t1.logging.clientfilter.LoggingTools.merge;
+import static com.github.t1.logging.clientfilter.LoggingTools.safe;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static javax.ws.rs.core.MediaType.CHARSET_PARAMETER;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 
 @Provider
 public class LoggingContainerFilter implements ContainerRequestFilter, ContainerResponseFilter {
-    /**
-     * We consider passwords longer than this to be safe enough, so we can log the username,
-     * which basically makes debugging easier, as it often happens that you use the <i>wrong credentials</i>,
-     * but much less likely that you use the <i>wrong password</i> for the correct user.
-     */
-    private static final int SAFE_PASSWORD_LEN = 12;
-
     @Override public void filter(ContainerRequestContext requestContext) throws IOException {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
@@ -44,26 +36,6 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
         }
     }
 
-    private String safe(String name, List<String> values) {
-        if ("Authorization".equals(name)) {
-            List<String> safeValues = new ArrayList<>(values.size());
-            for (var value : values) {
-                var safeValue = "<hidden>";
-                var split = value.split(" ", 2);
-                if (split.length > 1 && "Basic".equalsIgnoreCase(split[0])) {
-                    var decoded = new String(Base64.getDecoder().decode(split[1])).split(":", 2);
-                    if (decoded.length > 1 && decoded[1].length() >= SAFE_PASSWORD_LEN) {
-                        var username = decoded[0];
-                        safeValue = username + ":" + safeValue;
-                    }
-                }
-                safeValues.add(safeValue);
-            }
-            values = safeValues;
-        }
-        return String.join(", ", values);
-    }
-
     @Override public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
@@ -71,7 +43,7 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
 
         log.debug("sending response for {} {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
         log.debug("<<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
-        responseContext.getStringHeaders().forEach((name, values) -> log.debug("<<< {}: {}", name, String.join(" ", values)));
+        responseContext.getStringHeaders().forEach((name, values) -> log.debug("<<< {}: {}", name, merge(values)));
         if (log.isDebugEnabled() && responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
             responseContext.setEntityStream(new LoggingOutputStream(responseContext.getEntityStream(), "<<<", log));
         }

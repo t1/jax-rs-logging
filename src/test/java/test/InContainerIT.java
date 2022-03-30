@@ -16,6 +16,7 @@ import static org.assertj.core.api.BDDAssertions.then;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.INFO;
 import static test.CustomAssertions.thenLogsIn;
+import static test.Ping.LONG_AUTH;
 
 @Testcontainers
 @Slf4j
@@ -57,7 +58,7 @@ class InContainerIT {
         log.debug("ping {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
-            .header("Authorization", "Basic Zm9vOjEyMzQ1Njc4OTAxMjM0NTY=") // foo:1234567890123456
+            .header("Authorization", LONG_AUTH)
             .post(json(new Payload("test")))
             .readEntity(String.class);
 
@@ -113,6 +114,7 @@ class InContainerIT {
             //
             .hasFollowingMessage("sending POST request http://localhost:8080/ping")
             .hasFollowingMessage(">> Accept: application/json")
+            .hasFollowingMessage(">> Authorization: foo:<hidden>")
             .hasFollowingMessage(">> Content-Type: application/json")
             .hasFollowingMessage(">> {\"payload\":\"indirect\"}")
             //
