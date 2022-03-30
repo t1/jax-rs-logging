@@ -67,7 +67,7 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
             <!--suppress MavenPackageUpdate -->
-            <version>2.1.6</version>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
