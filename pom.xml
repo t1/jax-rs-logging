@@ -150,6 +150,13 @@
             <version>2.0</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.annotation</groupId>
+            <artifactId>jakarta.annotation-api</artifactId>
+            <!--suppress MavenPackageUpdate -->
+            <version>1.3.5</version>
+            <scope>provided</scope>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

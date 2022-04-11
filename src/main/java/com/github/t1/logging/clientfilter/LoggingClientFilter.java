@@ -3,6 +3,7 @@ package com.github.t1.logging.clientfilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Priority;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import javax.ws.rs.client.ClientResponseContext;
@@ -17,6 +18,7 @@ import java.nio.charset.Charset;
 import static com.github.t1.logging.clientfilter.LoggingTools.merge;
 import static com.github.t1.logging.clientfilter.LoggingTools.safe;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
+import static javax.ws.rs.Priorities.USER;
 import static javax.ws.rs.core.MediaType.CHARSET_PARAMETER;
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 
@@ -25,6 +27,7 @@ import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
  * Note: there is no <code>&#64;Provider</code> annotation, as we register it via the {@link RegisterLoggingClientFilter},
  * which works also when CDI is not available, and we don't want to have it registered twice.
  */
+@Priority(USER + 900)
 public class LoggingClientFilter implements ClientRequestFilter, ClientResponseFilter {
     private static final String LOGGING_OUTPUT_STREAM_PROPERTY = LoggingOutputStream.class.getName();
 
