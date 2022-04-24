@@ -9,7 +9,7 @@
     <version>1.0-SNAPSHOT</version>
 
     <name>jax-rs-logging</name>
-    <description>Debug-log all http traffic; server and client side; JEE</description>
+    <description>Debug-log all http traffic via JAX-RS or MicroProfile REST Client; server and client side</description>
     <url>https://github.com/t1/jax-rs-logging</url>
 
     <properties>

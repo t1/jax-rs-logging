@@ -22,6 +22,8 @@ import static test.Ping.LONG_AUTH;
 @Testcontainers
 @Slf4j
 class InContainerIT {
+    public static final String FOO_BAR = "Zm9vOmJhcg==";
+
     @Container static JeeContainer SERVER = JeeContainer.create()
         .withDeployment(war("ROOT").withClasses(Ping.class, Ping.Payload.class, Ping.Api.class, REST.class),
             addLib("target/jax-rs-logging.jar"))
@@ -34,7 +36,7 @@ class InContainerIT {
         log.debug("ping {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
-            .header(AUTHORIZATION, "Basic Zm9vOmJhcg==") // foo:bar
+            .header(AUTHORIZATION, "Basic " + FOO_BAR)
             .post(json(new Payload("test")))
             .readEntity(String.class);
 
@@ -51,7 +53,7 @@ class InContainerIT {
             .hasFollowingMessage("<<< Status: 200 OK")
             .hasFollowingMessage("<<< Content-Type: application/json")
             .hasFollowingMessage("<<< {\"payload\":\"pong:test\"}");
-        then(SERVER.getLogs()).doesNotContain("Zm9vOmJhcg==");
+        then(SERVER.getLogs()).doesNotContain(FOO_BAR);
     }
 
     @Test void shouldLogTheUserNameWhenThePasswordIsLong() {
