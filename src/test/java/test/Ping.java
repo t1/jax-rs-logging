@@ -27,7 +27,7 @@ public class Ping {
     @Produces(APPLICATION_JSON)
     @POST public Payload ping(Payload in) {
         log.info("got pinged {}", in);
-        return new Payload("pong:" + in.getPayload());
+        return new Payload("pong:" + ((in == null) ? null : in.getPayload()));
     }
 
     @AllArgsConstructor @NoArgsConstructor(force = true)
