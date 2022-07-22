@@ -16,7 +16,7 @@
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
 
         <surefire.version>3.0.0-M7</surefire.version>
-        <resteasy.version>4.7.6.Final</resteasy.version>
+        <resteasy.version>4.7.7.Final</resteasy.version>
     </properties>
 
     <scm>
