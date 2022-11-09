@@ -1,6 +1,7 @@
 package test;
 
 import com.github.t1.testcontainers.jee.JeeContainer;
+import com.github.t1.testcontainers.jee.WildflyContainer;
 import com.github.t1.testcontainers.tools.LogLine;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
@@ -10,21 +11,21 @@ import test.Ping.Payload;
 
 import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static com.github.t1.testcontainers.tools.DeployableBuilder.war;
-import static javax.ws.rs.client.Entity.json;
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static jakarta.ws.rs.client.Entity.json;
+import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.INFO;
 import static test.CustomAssertions.thenLogsIn;
 import static test.Ping.LONG_AUTH;
 
-@Testcontainers
+@SuppressWarnings("resource") @Testcontainers
 @Slf4j
 class InContainerIT {
     public static final String FOO_BAR = "Zm9vOmJhcg==";
 
-    @Container static JeeContainer SERVER = JeeContainer.create()
+    @Container static JeeContainer SERVER = WildflyContainer.create("27.0-jdk11")
         .withDeployment(war("ROOT").withClasses(Ping.class, Ping.Payload.class, Ping.Api.class, REST.class),
             addLib("target/jax-rs-logging.jar"))
         .withLogLevel(Ping.class, DEBUG) // container/server side

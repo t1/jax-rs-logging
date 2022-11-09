@@ -1,14 +1,14 @@
 package com.github.t1.logging.clientfilter;
 
+import jakarta.annotation.Priority;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.client.ClientResponseContext;
+import jakarta.ws.rs.client.ClientResponseFilter;
+import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Priority;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.client.ClientResponseContext;
-import javax.ws.rs.client.ClientResponseFilter;
-import javax.ws.rs.core.MediaType;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -17,10 +17,10 @@ import java.nio.charset.Charset;
 
 import static com.github.t1.logging.clientfilter.LoggingTools.merge;
 import static com.github.t1.logging.clientfilter.LoggingTools.safe;
+import static jakarta.ws.rs.Priorities.USER;
+import static jakarta.ws.rs.core.MediaType.CHARSET_PARAMETER;
+import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
-import static javax.ws.rs.Priorities.USER;
-import static javax.ws.rs.core.MediaType.CHARSET_PARAMETER;
-import static javax.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 
 /**
  * <p>
