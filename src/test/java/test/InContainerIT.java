@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import test.Ping.Payload;
 
 import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static com.github.t1.testcontainers.tools.DeployableBuilder.war;
@@ -38,7 +37,7 @@ class InContainerIT {
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
             .header(AUTHORIZATION, "Basic " + FOO_BAR)
-            .post(json(new Payload("test")))
+            .post(json(new Ping.Payload("test")))
             .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
@@ -63,7 +62,7 @@ class InContainerIT {
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
             .header(AUTHORIZATION, LONG_AUTH)
-            .post(json(new Payload("test")))
+            .post(json(new Ping.Payload("test")))
             .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
@@ -79,7 +78,7 @@ class InContainerIT {
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
             .header("Foo", "bar")
             .header("foo", "baz")
-            .post(json(new Payload("test")))
+            .post(json(new Ping.Payload("test")))
             .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
@@ -94,7 +93,7 @@ class InContainerIT {
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
             .header("Foo", " bar ")
-            .post(json(new Payload("test")))
+            .post(json(new Ping.Payload("test")))
             .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
