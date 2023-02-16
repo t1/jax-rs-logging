@@ -1,4 +1,4 @@
-= JAX-RS Logging image:https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml/badge.svg[link=https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml]
+= JAX-RS Logging image:https://maven-badges.herokuapp.com/maven-central/com.github.t1/jax-rs-logging/badge.svg[link=https://search.maven.org/artifact/com.github.t1/jax-rs-logging] image:https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml/badge.svg[link=https://github.com/t1/jax-rs-logging/actions/workflows/maven.yml]
 
 //image:https://maven-badges.herokuapp.com/maven-central/com.github.t1/jax-rs-logging/badge.svg[link=https://search.maven.org/artifact/com.github.t1/jax-rs-logging]
 
