@@ -2,6 +2,7 @@ package test;
 
 import com.github.t1.testcontainers.jee.JeeContainer;
 import com.github.t1.testcontainers.tools.LogLine;
+import com.github.t1.testcontainers.tools.LogLinesAssert;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.junit.jupiter.Container;
@@ -29,7 +30,9 @@ class InContainerIT {
             addLib("target/jax-rs-logging.jar"))
         .withLogLevel(Ping.class, DEBUG) // container/server side
         .withLogLevel(Ping.Api.class, DEBUG) // client side
-        .withMainPortBoundToFixedPort(8080); // makes manual testing and debugging easier
+        .withMainPortBoundToFixedPort(8080) // makes manual testing and debugging easier
+        .withPortBoundToFixedPort(8787, 8787) // debug
+        .withPortBoundToFixedPort(9990, 9990); // management
 
     @Test void shouldPing() {
         var webTarget = SERVER.target().path("ping");
@@ -42,17 +45,18 @@ class InContainerIT {
 
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
-        thenLogsIn(SERVER)
-            .hasFollowingMessage("got POST request http://localhost:8080/ping")
-            .hasFollowingMessage(">>> Accept: application/json")
-            .hasFollowingMessage(">>> Authorization: <hidden>")
-            .hasFollowingMessage(">>> Content-Type: application/json")
-            .hasFollowingMessage(">>> {\"payload\":\"test\"}")
+        LogLinesAssert<?, ?> logLinesAssert = thenLogsIn(SERVER);
+        logLinesAssert
+            .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> Authorization: <hidden>").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> {\"payload\":\"test\"}").withLogger("test.Ping.ping"))
             .hasFollowing(LogLine.message("got pinged Ping.Payload(payload=test)").withLevel(INFO).withLogger(Ping.class.getName()))
-            .hasFollowingMessage("sending response for POST http://localhost:8080/ping")
-            .hasFollowingMessage("<<< Status: 200 OK")
-            .hasFollowingMessage("<<< Content-Type: application/json")
-            .hasFollowingMessage("<<< {\"payload\":\"pong:test\"}");
+            .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:test\"}").withLogger("test.Ping.ping"));
         then(SERVER.getLogs()).doesNotContain(FOO_BAR);
     }
 
@@ -68,7 +72,7 @@ class InContainerIT {
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
-            .hasFollowingMessage(">>> Authorization: foo:<hidden>");
+            .hasFollowing(LogLine.message(">>> Authorization: foo:<hidden>").withLogger("test.Ping.ping"));
     }
 
     @Test void shouldLogRepeatedHeader() {
@@ -84,7 +88,7 @@ class InContainerIT {
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
-            .hasFollowingMessage(">>> Foo: bar, baz");
+            .hasFollowing(LogLine.message(">>> Foo: bar, baz").withLogger("test.Ping.ping"));
     }
 
     @Test void shouldLogTrimmedHeader() {
@@ -99,7 +103,7 @@ class InContainerIT {
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
-            .hasFollowingMessage(">>> Foo: bar");
+            .hasFollowing(LogLine.message(">>> Foo: bar").withLogger("test.Ping.ping"));
     }
 
     @Test void shouldGetIndirectPing() {
@@ -110,37 +114,37 @@ class InContainerIT {
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("indirect:pong:indirect");
         thenLogsIn(SERVER).thread("default task-1")
-            .hasFollowingMessage("got GET request http://localhost:8080/ping/indirect")
-            .hasFollowingMessage(">>> Accept: application/json")
+            .hasFollowing(LogLine.message("got GET request http://localhost:8080/ping/indirect").withLogger("test.Ping.indirect"))
+            .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.indirect"))
             //
-            .hasFollowingMessage("got indirect")
+            .hasFollowing(LogLine.message("got indirect").withLogger("test.Ping"))
             //
-            .hasFollowingMessage("sending POST request http://localhost:8080/ping")
-            .hasFollowingMessage(">> Accept: application/json")
-            .hasFollowingMessage(">> Authorization: foo:<hidden>")
-            .hasFollowingMessage(">> Content-Type: application/json")
-            .hasFollowingMessage(">> {\"payload\":\"indirect\"}")
+            .hasFollowing(LogLine.message("sending POST request http://localhost:8080/ping").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message(">> Accept: application/json").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message(">> Authorization: foo:<hidden>").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message(">> Content-Type: application/json").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message(">> {\"payload\":\"indirect\"}").withLogger("test.Ping$Api.ping"))
             //
-            .hasFollowingMessage("got response for POST http://localhost:8080/ping")
-            .hasFollowingMessage("<< Status: 200 OK")
-            .hasFollowingMessage("<< Content-Type: application/json")
-            .hasFollowingMessage("<< {\"payload\":\"pong:indirect\"}")
+            .hasFollowing(LogLine.message("got response for POST http://localhost:8080/ping").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message("<< Status: 200 OK").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message("<< Content-Type: application/json").withLogger("test.Ping$Api.ping"))
+            .hasFollowing(LogLine.message("<< {\"payload\":\"pong:indirect\"}").withLogger("test.Ping$Api.ping"))
             //
-            .hasFollowingMessage("sending response for GET http://localhost:8080/ping/indirect")
-            .hasFollowingMessage("<<< Status: 200 OK")
-            .hasFollowingMessage("<<< Content-Type: application/json")
-            .hasFollowingMessage("<<< indirect:pong:indirect");
+            .hasFollowing(LogLine.message("sending response for GET http://localhost:8080/ping/indirect").withLogger("test.Ping.indirect"))
+            .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.indirect"))
+            .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.indirect"))
+            .hasFollowing(LogLine.message("<<< indirect:pong:indirect").withLogger("test.Ping.indirect"));
         thenLogsIn(SERVER).thread("default task-2")
-            .hasFollowingMessage("got POST request http://localhost:8080/ping")
-            .hasFollowingMessage(">>> Accept: application/json")
-            .hasFollowingMessage(">>> Content-Type: application/json")
-            .hasFollowingMessage(">>> {\"payload\":\"indirect\"}")
+            .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message(">>> {\"payload\":\"indirect\"}").withLogger("test.Ping.ping"))
             //
-            .hasFollowingMessage("got pinged Ping.Payload(payload=indirect)")
+            .hasFollowing(LogLine.message("got pinged Ping.Payload(payload=indirect)").withLogger("test.Ping"))
             //
-            .hasFollowingMessage("sending response for POST http://localhost:8080/ping")
-            .hasFollowingMessage("<<< Status: 200 OK")
-            .hasFollowingMessage("<<< Content-Type: application/json")
-            .hasFollowingMessage("<<< {\"payload\":\"pong:indirect\"}");
+            .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
+            .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:indirect\"}").withLogger("test.Ping.ping"));
     }
 }

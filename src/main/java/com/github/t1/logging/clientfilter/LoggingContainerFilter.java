@@ -53,15 +53,15 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
     }
 
     private Logger getLog(ContainerRequestContext requestContext) {
-        Class<?> loggerClass = LoggingContainerFilter.class;
+        var loggerName = LoggingContainerFilter.class.getName();
         var resourceMethodInvoker = requestContext.getProperty("org.jboss.resteasy.core.ResourceMethodInvoker");
         if (resourceMethodInvoker != null) {
             var method = getMethod(resourceMethodInvoker);
             if (method != null) {
-                loggerClass = method.getDeclaringClass();
+                loggerName = method.getDeclaringClass().getName() + "." + method.getName();
             }
         }
-        return LoggerFactory.getLogger(loggerClass);
+        return LoggerFactory.getLogger(loggerName);
     }
 
     private Method getMethod(Object resourceMethodInvoker) {
