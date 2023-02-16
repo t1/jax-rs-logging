@@ -10,7 +10,7 @@ import org.eclipse.microprofile.rest.client.spi.RestClientListener;
 @Slf4j
 public class RegisterLoggingClientFilter implements RestClientListener {
     @Override public void onNewClient(Class<?> serviceInterface, RestClientBuilder builder) {
-        log.info("register logging client for {}", serviceInterface.getName());
+        log.debug("register logging client for {}", serviceInterface.getName());
         builder.register(LoggingClientFilter.class);
     }
 }

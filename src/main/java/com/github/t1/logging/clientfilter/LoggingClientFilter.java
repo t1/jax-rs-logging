@@ -23,7 +23,6 @@ import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
- * <p>
  * Note: there is no <code>&#64;Provider</code> annotation, as we register it via the {@link RegisterLoggingClientFilter},
  * which works also when CDI is not available, and we don't want to have it registered twice.
  */
@@ -66,8 +65,9 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
     private Logger getLog(ClientRequestContext requestContext) {
         var properties = requestContext.getConfiguration().getProperties();
         var method = (Method) properties.get("org.eclipse.microprofile.rest.client.invokedMethod");
-        var loggerClass = (method == null) ? LoggingClientFilter.class : method.getDeclaringClass();
-        return LoggerFactory.getLogger(loggerClass);
+        var loggerName = (method == null) ? LoggingClientFilter.class.getName()
+            : method.getDeclaringClass().getName() + "." + method.getName();
+        return LoggerFactory.getLogger(loggerName);
     }
 
     private boolean isLoggable(MediaType mediaType) {
