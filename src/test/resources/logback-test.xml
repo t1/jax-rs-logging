@@ -12,4 +12,5 @@
     <logger name="org.jboss.resteasy.resteasy_jaxrs.i18n" level="INFO"/>
     <logger name="com.github.dockerjava.core.command.PullImageResultCallback" level="INFO"/>
     <logger name="com.github.dockerjava.zerodep.shaded" level="INFO"/>
+    <logger name="com.github.dockerjava.zerodep.ApacheDockerHttpClientImpl$ApacheResponse" level="INFO"/>
 </configuration>

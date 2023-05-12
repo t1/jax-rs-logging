@@ -20,10 +20,11 @@ import static org.slf4j.event.Level.INFO;
 import static test.CustomAssertions.thenLogsIn;
 import static test.Ping.LONG_AUTH;
 
-@SuppressWarnings("resource") @Testcontainers
+@SuppressWarnings("resource")
+@Testcontainers
 @Slf4j
 class InContainerIT {
-    public static final String FOO_BAR = "Zm9vOmJhcg==";
+    public static final String FOO_BAR = "Zm9vOmJhcg=="; // foo:bar
 
     @Container static JeeContainer SERVER = WildflyContainer.create("27.0-jdk11")
         .withDeployment(war("ROOT").withClasses(Ping.class, Ping.Payload.class, Ping.Api.class, REST.class),
