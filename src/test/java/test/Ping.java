@@ -1,12 +1,7 @@
 package test;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.HeaderParam;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,25 +19,32 @@ public class Ping {
 
     @Consumes(APPLICATION_JSON)
     @Produces(APPLICATION_JSON)
-    @POST public Payload ping(Payload in) {
+    @POST
+    public Payload ping(Payload in) {
         log.info("got pinged {}", in);
         return new Payload("pong:" + ((in == null) ? null : in.getPayload()));
     }
 
-    @AllArgsConstructor @NoArgsConstructor(force = true)
-    @Data public static class Payload {
+    @AllArgsConstructor
+    @NoArgsConstructor(force = true)
+    @Data
+    public static class Payload {
         String payload;
     }
 
     @RegisterRestClient(baseUri = "http://localhost:8080/ping")
     public interface Api {
-        @POST Payload ping(@HeaderParam(AUTHORIZATION) String auth, Payload in);
+        @POST
+        Payload ping(@HeaderParam(AUTHORIZATION) String auth, Payload in);
     }
 
-    @Inject @RestClient Api api;
+    @Inject
+    @RestClient
+    Api api;
 
     @Path("/indirect")
-    @GET public String indirect() {
+    @GET
+    public String indirect() {
         log.info("got indirect");
         return "indirect:" + api.ping(LONG_AUTH, new Payload("indirect")).payload;
     }

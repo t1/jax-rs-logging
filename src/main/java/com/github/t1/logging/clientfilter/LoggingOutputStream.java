@@ -17,12 +17,14 @@ class LoggingOutputStream extends FilterOutputStream {
         this.log = log;
     }
 
-    @Override public void write(int b) throws IOException {
+    @Override
+    public void write(int b) throws IOException {
         super.write(b);
         buffer.appendCodePoint(b);
     }
 
-    @Override public void close() throws IOException {
+    @Override
+    public void close() throws IOException {
         super.close();
         buffer.toString().lines().forEach(line -> log.debug("{} {}", direction, line));
     }
