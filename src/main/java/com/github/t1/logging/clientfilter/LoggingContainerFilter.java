@@ -25,7 +25,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 @Provider
 @Priority(USER + 900)
 public class LoggingContainerFilter implements ContainerRequestFilter, ContainerResponseFilter {
-    @Override public void filter(ContainerRequestContext requestContext) throws IOException {
+    @Override
+    public void filter(ContainerRequestContext requestContext) throws IOException {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
             return;
@@ -39,7 +40,8 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
         }
     }
 
-    @Override public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
+    @Override
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
             return;
@@ -75,12 +77,12 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
 
     private boolean isLoggable(MediaType mediaType) {
         return isApplication(mediaType, "json")
-               || isApplication(mediaType, "xml")
-               || mediaType.isCompatible(TEXT_PLAIN_TYPE);
+                || isApplication(mediaType, "xml")
+                || mediaType.isCompatible(TEXT_PLAIN_TYPE);
     }
 
     private boolean isApplication(MediaType mediaType, String subType) {
         return mediaType.getType().equals("application")
-               && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
+                && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
     }
 }

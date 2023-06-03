@@ -30,7 +30,8 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 public class LoggingClientFilter implements ClientRequestFilter, ClientResponseFilter {
     private static final String LOGGING_OUTPUT_STREAM_PROPERTY = LoggingOutputStream.class.getName();
 
-    @Override public void filter(ClientRequestContext requestContext) {
+    @Override
+    public void filter(ClientRequestContext requestContext) {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
             return;
@@ -43,7 +44,8 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         }
     }
 
-    @Override public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
+    @Override
+    public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
         var log = getLog(requestContext);
         if (!log.isDebugEnabled())
             return;
@@ -66,18 +68,18 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         var properties = requestContext.getConfiguration().getProperties();
         var method = (Method) properties.get("org.eclipse.microprofile.rest.client.invokedMethod");
         var loggerName = (method == null) ? LoggingClientFilter.class.getName()
-            : method.getDeclaringClass().getName() + "." + method.getName();
+                : method.getDeclaringClass().getName() + "." + method.getName();
         return LoggerFactory.getLogger(loggerName);
     }
 
     private boolean isLoggable(MediaType mediaType) {
         return isApplication(mediaType, "json")
-               || isApplication(mediaType, "xml")
-               || mediaType.isCompatible(TEXT_PLAIN_TYPE);
+                || isApplication(mediaType, "xml")
+                || mediaType.isCompatible(TEXT_PLAIN_TYPE);
     }
 
     private boolean isApplication(MediaType mediaType, String subType) {
         return mediaType.getType().equals("application")
-               && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
+                && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
     }
 }
