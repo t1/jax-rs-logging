@@ -48,7 +48,7 @@ class InContainerIT {
 
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
-        LogLinesAssert<?, ?> logLinesAssert = thenLogsIn(SERVER);
+        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
         logLinesAssert
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.ping"))
