@@ -6,6 +6,8 @@ import com.github.t1.testcontainers.tools.LogLine;
 import com.github.t1.testcontainers.tools.LogLinesAssert;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -63,20 +65,21 @@ class InContainerIT {
         then(SERVER.getLogs()).doesNotContain(FOO_BAR);
     }
 
-    @Test
-    void shouldLogTheUserNameWhenThePasswordIsLong() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Authorization", "authorization", "AUTHORIZATION", "AuThOrIzAtIoN"})
+    void shouldLogTheUserNameWhenThePasswordIsLong(String authorizationHeaderName) {
         var webTarget = SERVER.target().path("ping");
         log.debug("ping {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
-                .header(AUTHORIZATION, LONG_AUTH)
+                .header(authorizationHeaderName, LONG_AUTH)
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
         log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
-                .hasFollowing(LogLine.message(">>> Authorization: foo:<hidden>").withLogger("test.Ping.ping"));
+                .hasFollowing(LogLine.message(">>> " + authorizationHeaderName + ": foo:<hidden>").withLogger("test.Ping.ping"));
     }
 
     @Test

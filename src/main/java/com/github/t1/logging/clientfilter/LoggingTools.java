@@ -15,7 +15,7 @@ class LoggingTools {
     private static final int SAFE_PASSWORD_LEN = 12;
 
     static String safe(String name, List<String> values) {
-        if (AUTHORIZATION.equals(name)) {
+        if (AUTHORIZATION.equalsIgnoreCase(name)) {
             List<String> safeValues = new ArrayList<>(values.size());
             for (var value : values) {
                 var safeValue = "<hidden>";
