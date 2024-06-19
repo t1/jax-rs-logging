@@ -24,7 +24,7 @@ import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Note: there is no <code>&#64;Provider</code> annotation, as we register it via the {@link RegisterLoggingClientFilter},
- * which works also when CDI is not available, and we don't want to have it registered twice.
+ * which works also when CDI is not available (e.g. in tests), and we don't want to have it registered twice.
  */
 @Priority(USER + 900)
 public class LoggingClientFilter implements ClientRequestFilter, ClientResponseFilter {
@@ -74,12 +74,12 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
 
     private boolean isLoggable(MediaType mediaType) {
         return isApplication(mediaType, "json")
-                || isApplication(mediaType, "xml")
-                || mediaType.isCompatible(TEXT_PLAIN_TYPE);
+               || isApplication(mediaType, "xml")
+               || mediaType.isCompatible(TEXT_PLAIN_TYPE);
     }
 
     private boolean isApplication(MediaType mediaType, String subType) {
         return mediaType.getType().equals("application")
-                && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
+               && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
     }
 }
