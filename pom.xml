@@ -15,7 +15,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>utf-8</project.build.sourceEncoding>
 
-        <surefire.version>3.4.0</surefire.version>
+        <surefire.version>3.5.0</surefire.version>
         <resteasy.version>6.2.10.Final</resteasy.version>
     </properties>
 
