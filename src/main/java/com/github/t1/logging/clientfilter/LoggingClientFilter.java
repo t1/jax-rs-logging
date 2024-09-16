@@ -38,9 +38,15 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         log.debug("sending {} request {}", requestContext.getMethod(), requestContext.getUri());
         requestContext.getStringHeaders().forEach((name, values) -> log.debug(">> {}: {}", name, safe(name, values)));
         if (requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
-            OutputStream stream = new LoggingOutputStream(requestContext.getEntityStream(), ">>", log);
-            requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
-            requestContext.setEntityStream(stream);
+            try {
+                var entityStream = requestContext.getEntityStream();
+                OutputStream stream = new LoggingOutputStream(entityStream, ">>", log);
+                requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
+                requestContext.setEntityStream(stream);
+            } catch (RuntimeException e) {
+                log.warn("can't read entity stream... will log toString", e);
+                log.debug(">> {}", requestContext.getEntity());
+            }
         }
     }
 
@@ -55,7 +61,9 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
 
         log.debug("got response for {} {}", requestContext.getMethod(), requestContext.getUri());
         log.debug("<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
-        responseContext.getHeaders().forEach((name, values) -> log.debug("<< {}: {}", name, merge(values)));
+        var headers = responseContext.getHeaders();
+        if (headers != null)
+            headers.forEach((name, values) -> log.debug("<< {}: {}", name, merge(values)));
         if (log.isDebugEnabled() && responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
             var charset = Charset.forName(responseContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
             var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
