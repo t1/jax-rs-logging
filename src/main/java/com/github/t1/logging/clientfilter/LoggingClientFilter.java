@@ -44,7 +44,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
                 requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
                 requestContext.setEntityStream(stream);
             } catch (RuntimeException e) {
-                log.warn("can't read entity stream... will log toString", e);
+                log.warn("can't read entity stream... will log toString. Cause: {}", e.toString());
                 log.debug(">> {}", requestContext.getEntity());
             }
         }
