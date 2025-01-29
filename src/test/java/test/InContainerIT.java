@@ -157,4 +157,53 @@ class InContainerIT {
                 .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:indirect\"}").withLogger("test.Ping.ping"));
     }
+
+    @Test
+    void shouldPingWithoutAcceptHeader() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("ping {}", webTarget.getUri());
+
+        var pong = webTarget.request()
+                .post(json(new Ping.Payload("test")))
+                .readEntity(String.class);
+
+        log.debug("ping returned {}", pong);
+        then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
+        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
+        logLinesAssert
+                .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message(">>> {\"payload\":\"test\"}").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("got pinged Ping.Payload(payload=test)").withLevel(INFO).withLogger(Ping.class.getName()))
+                .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:test\"}").withLogger("test.Ping.ping"));
+        then(SERVER.getLogs()).doesNotContain(FOO_BAR);
+    }
+
+    @Test
+    void shouldPingWithCharset() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("ping {}", webTarget.getUri());
+
+        var pong = webTarget.request(APPLICATION_JSON_TYPE.withCharset("UTF-8"))
+                .post(json(new Ping.Payload("test")))
+                .readEntity(String.class);
+
+        log.debug("ping returned {}", pong);
+        then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
+        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
+        logLinesAssert
+                .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message(">>> Accept: application/json;charset=UTF-8").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message(">>> {\"payload\":\"test\"}").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("got pinged Ping.Payload(payload=test)").withLevel(INFO).withLogger(Ping.class.getName()))
+                .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
+                .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:test\"}").withLogger("test.Ping.ping"));
+        then(SERVER.getLogs()).doesNotContain(FOO_BAR);
+    }
 }

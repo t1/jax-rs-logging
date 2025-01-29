@@ -5,7 +5,6 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.ClientResponseContext;
 import jakarta.ws.rs.client.ClientResponseFilter;
-import jakarta.ws.rs.core.MediaType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +12,11 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
-import java.nio.charset.Charset;
 
+import static com.github.t1.logging.clientfilter.LoggingTools.isLoggable;
 import static com.github.t1.logging.clientfilter.LoggingTools.merge;
 import static com.github.t1.logging.clientfilter.LoggingTools.safe;
 import static jakarta.ws.rs.Priorities.USER;
-import static jakarta.ws.rs.core.MediaType.CHARSET_PARAMETER;
-import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 /**
  * Note: there is no <code>&#64;Provider</code> annotation, as we register it via the {@link RegisterLoggingClientFilter},
@@ -65,7 +61,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         if (headers != null)
             headers.forEach((name, values) -> log.debug("<< {}: {}", name, merge(values)));
         if (log.isDebugEnabled() && responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
-            var charset = Charset.forName(responseContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
+            var charset = LoggingTools.charset(responseContext.getMediaType());
             var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
             entity.lines().forEach(line -> log.debug("<< {}", line));
             responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
@@ -78,16 +74,5 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
         var loggerName = (method == null) ? LoggingClientFilter.class.getName()
                 : method.getDeclaringClass().getName() + "." + method.getName();
         return LoggerFactory.getLogger(loggerName);
-    }
-
-    private boolean isLoggable(MediaType mediaType) {
-        return isApplication(mediaType, "json")
-               || isApplication(mediaType, "xml")
-               || mediaType.isCompatible(TEXT_PLAIN_TYPE);
-    }
-
-    private boolean isApplication(MediaType mediaType, String subType) {
-        return mediaType.getType().equals("application")
-               && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
     }
 }

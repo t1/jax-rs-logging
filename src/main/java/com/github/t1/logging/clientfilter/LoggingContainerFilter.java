@@ -5,7 +5,6 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
-import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.ext.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,14 +12,11 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.nio.charset.Charset;
 
+import static com.github.t1.logging.clientfilter.LoggingTools.isLoggable;
 import static com.github.t1.logging.clientfilter.LoggingTools.merge;
 import static com.github.t1.logging.clientfilter.LoggingTools.safe;
 import static jakarta.ws.rs.Priorities.USER;
-import static jakarta.ws.rs.core.MediaType.CHARSET_PARAMETER;
-import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
-import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 @Provider
 @Priority(USER + 900)
@@ -33,7 +29,7 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
         log.debug("got {} request {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
         requestContext.getHeaders().forEach((name, values) -> log.debug(">>> {}: {}", name, safe(name, values)));
         if (log.isDebugEnabled() && requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
-            var charset = Charset.forName(requestContext.getMediaType().getParameters().getOrDefault(CHARSET_PARAMETER, ISO_8859_1.name()));
+            var charset = LoggingTools.charset(requestContext.getMediaType());
             var entity = new String(requestContext.getEntityStream().readAllBytes(), charset);
             entity.lines().forEach(line -> log.debug(">>> {}", line));
             requestContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
@@ -73,16 +69,5 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
         } catch (ReflectiveOperationException e) {
             return null;
         }
-    }
-
-    private boolean isLoggable(MediaType mediaType) {
-        return isApplication(mediaType, "json")
-                || isApplication(mediaType, "xml")
-                || mediaType.isCompatible(TEXT_PLAIN_TYPE);
-    }
-
-    private boolean isApplication(MediaType mediaType, String subType) {
-        return mediaType.getType().equals("application")
-                && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
     }
 }
