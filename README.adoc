@@ -9,10 +9,11 @@ It logs at `DEBUG` level using https://www.slf4j.org[slf4j].
 It tries to find out what API class was used (or fall back to a generic logger), e.g. when you use MP REST Client, it uses the name of the client API interface as the logger.
 On the server, I didn't find a standardized way to find out what API class handles the request; so that works currently only for RestEasy... any hints are very welcome.
 
-If the logger is not enabled at `DEBUG` level, it looks for a logger config with an additional `..single` suffix, i.e. if the method is `test.Ping#ping` and `test.Ping.ping` is disabled, it looks if `test.Ping.ping..single` is enabled.
+If the logger is not enabled (at `DEBUG` level), it looks for a logger config with an additional `..single` suffix, i.e. if the method is `test.Ping#ping` and `test.Ping.ping` is disabled, it looks if `test.Ping.ping..single` is enabled.
 In this case, it logs the request and response in a single multi-line log invocation.
+If that is still disabled, it logs nothing.
 
-It logs the `Authorization` header value as `<hidden>`; with an exception: we consider passwords with at least 12 characters to be safe enough, so we can log the username and only hide the password.
+It logs the `Authorization` header value as `<hidden>`; with one exception: we consider passwords in a `Basic` auth with at least 12 characters to be safe enough, so we can log the username and only hide the password.
 This often makes debugging issues with credentials easier, as it easily happens that you use the _wrong credentials_, but it's much less likely that you use the _wrong password_ for the correct user.
 
 It joins repeated headers into a single, comma separated log line.
