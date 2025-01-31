@@ -3,7 +3,6 @@ package test;
 import com.github.t1.testcontainers.jee.JeeContainer;
 import com.github.t1.testcontainers.jee.WildflyContainer;
 import com.github.t1.testcontainers.tools.LogLine;
-import com.github.t1.testcontainers.tools.LogLinesAssert;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +15,7 @@ import static com.github.t1.testcontainers.tools.DeployableBuilder.war;
 import static jakarta.ws.rs.client.Entity.json;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.INFO;
@@ -48,10 +48,8 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
-        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
-        logLinesAssert
+        thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Authorization: <hidden>").withLogger("test.Ping.ping"))
@@ -76,7 +74,6 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message(">>> " + authorizationHeaderName + ": foo:<hidden>").withLogger("test.Ping.ping"));
@@ -93,7 +90,6 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message(">>> Foo: bar, baz").withLogger("test.Ping.ping"));
@@ -109,7 +105,6 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
         thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message(">>> Foo: bar").withLogger("test.Ping.ping"));
@@ -119,13 +114,12 @@ class InContainerIT {
     void shouldGetIndirectPing() {
         var webTarget = SERVER.target().path("ping/indirect");
         log.debug("indirect ping: {}", webTarget.getUri());
-        var pong = webTarget.request(APPLICATION_JSON_TYPE).get(String.class);
+        var pong = webTarget.request(TEXT_PLAIN_TYPE).get(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("indirect:pong:indirect");
         thenLogsIn(SERVER).thread("default task-1")
                 .hasFollowing(LogLine.message("got GET request http://localhost:8080/ping/indirect").withLogger("test.Ping.indirect"))
-                .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.indirect"))
+                .hasFollowing(LogLine.message(">>> Accept: text/plain").withLogger("test.Ping.indirect"))
                 //
                 .hasFollowing(LogLine.message("got indirect").withLogger("test.Ping"))
                 //
@@ -142,7 +136,7 @@ class InContainerIT {
                 //
                 .hasFollowing(LogLine.message("sending response for GET http://localhost:8080/ping/indirect").withLogger("test.Ping.indirect"))
                 .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.indirect"))
-                .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.indirect"))
+                .hasFollowing(LogLine.message("<<< Content-Type: text/plain;charset=UTF-8").withLogger("test.Ping.indirect"))
                 .hasFollowing(LogLine.message("<<< indirect:pong:indirect").withLogger("test.Ping.indirect"));
         thenLogsIn(SERVER).thread("default task-2")
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
@@ -167,10 +161,8 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
-        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
-        logLinesAssert
+        thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> {\"payload\":\"test\"}").withLogger("test.Ping.ping"))
@@ -191,10 +183,8 @@ class InContainerIT {
                 .post(json(new Ping.Payload("test")))
                 .readEntity(String.class);
 
-        log.debug("ping returned {}", pong);
         then(pong).isEqualTo("{\"payload\":\"pong:test\"}");
-        LogLinesAssert logLinesAssert = thenLogsIn(SERVER);
-        logLinesAssert
+        thenLogsIn(SERVER)
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Accept: application/json;charset=UTF-8").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))

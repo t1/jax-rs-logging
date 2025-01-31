@@ -13,7 +13,10 @@ import static jakarta.ws.rs.core.MediaType.CHARSET_PARAMETER;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
-class LoggingTools {
+public class LoggingTools {
+    /// The suffix for the single-line logger.
+    public static final String SINGLE = "..single";
+
     /**
      * We consider passwords longer than this to be safe enough, so we can log the username,
      * which basically makes debugging easier, as it often happens that you use the <i>wrong credentials</i>,
@@ -23,7 +26,7 @@ class LoggingTools {
 
     static String safe(String name, List<String> values) {
         if (AUTHORIZATION.equalsIgnoreCase(name)) {
-            List<String> safeValues = new ArrayList<>(values.size());
+            var safeValues = new ArrayList<String>(values.size());
             for (var value : values) {
                 var safeValue = "<hidden>";
                 var split = value.split(" ", 2);
@@ -64,5 +67,18 @@ class LoggingTools {
                 .flatMap(params -> Optional.ofNullable(params.get(CHARSET_PARAMETER)))
                 .map(Charset::forName)
                 .orElse(ISO_8859_1);
+    }
+
+    static void format(StringBuilder buffer, String message, Object[] args) {
+        int argIndex = 0;
+        // we don't need a perfect state machine here, as this is only for a well known set of messages
+        for (var c : message.toCharArray()) {
+            switch (c) {
+                case '{' -> {}
+                case '}' -> buffer.append(args[argIndex++]);
+                default -> buffer.append(c);
+            }
+        }
+        buffer.append('\n');
     }
 }

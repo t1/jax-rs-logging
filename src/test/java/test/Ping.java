@@ -1,7 +1,12 @@
 package test;
 
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,6 +16,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
 
 @Path("/ping")
 @Slf4j
@@ -44,6 +50,7 @@ public class Ping {
 
     @Path("/indirect")
     @GET
+    @Produces(TEXT_PLAIN)
     public String indirect() {
         log.info("got indirect");
         return "indirect:" + api.ping(LONG_AUTH, new Payload("indirect")).payload;
