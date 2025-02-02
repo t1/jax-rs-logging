@@ -69,10 +69,10 @@ public interface LogWrapper extends AutoCloseable {
         }
 
         @Override public void close() {
-            checkNotClosed();
-            closed = true;
             if (!buffer.isEmpty() && buffer.charAt(buffer.length() - 1) == '\n') buffer.setLength(buffer.length() - 1);
             logger.debug(buffer.toString());
+            checkNotClosed();
+            closed = true;
         }
 
         private void checkNotClosed() {

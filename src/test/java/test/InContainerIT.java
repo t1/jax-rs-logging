@@ -16,6 +16,7 @@ import static jakarta.ws.rs.client.Entity.json;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
+import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.assertj.core.api.BDDAssertions.then;
 import static org.slf4j.event.Level.DEBUG;
 import static org.slf4j.event.Level.INFO;
@@ -195,5 +196,19 @@ class InContainerIT {
                 .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:test\"}").withLogger("test.Ping.ping"));
         then(SERVER.getLogs()).doesNotContain(FOO_BAR);
+    }
+
+    @Test
+    void shouldLogFailingRequest() {
+        var webTarget = SERVER.target().path("ping/failing");
+
+        var response = webTarget.request().get();
+
+        then(response.getStatusInfo()).isEqualTo(BAD_REQUEST);
+        thenLogsIn(SERVER)
+                .hasFollowing(LogLine.message("got GET request http://localhost:8080/ping/failing").withLogger("test.Ping.failing"))
+                .hasFollowing(LogLine.message("got pinged for failing").withLevel(INFO).withLogger(Ping.class.getName()))
+                .hasFollowing(LogLine.message("sending response for GET http://localhost:8080/ping/failing").withLogger("test.Ping.failing"))
+                .hasFollowing(LogLine.message("<<< Status: 400 Bad Request").withLogger("test.Ping.failing"));
     }
 }

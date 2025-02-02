@@ -21,7 +21,8 @@ import static jakarta.ws.rs.Priorities.USER;
 public class LoggingContainerFilter implements ContainerRequestFilter, ContainerResponseFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) throws IOException {
-        try (var log = getLog(requestContext)) {
+        var log = getLog(requestContext);
+        try {
             if (log.off()) return;
             log.debug("got {} request {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
             requestContext.getHeaders().forEach((name, values) -> log.debug(">>> {}: {}", name, safe(name, values)));
@@ -31,6 +32,14 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
                 entity.lines().forEach(line -> log.debug(">>> {}", line));
                 requestContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
             }
+        } catch (RuntimeException e) {
+            log.warn("error logging container request", e);
+        } finally {
+            try {
+                log.close();
+            } catch (RuntimeException e2) {
+                log.warn("error closing log", e2);
+            }
         }
     }
 
@@ -38,7 +47,7 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         var log = getLog(requestContext);
         try {
-            if (log.off()) return;
+            if (log.off()) return; // the OFF logger doesn't have to be closed
             log.debug("sending response for {} {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
             log.debug("<<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
             responseContext.getStringHeaders().forEach((name, values) -> log.debug("<<< {}: {}", name, merge(values)));
@@ -50,12 +59,7 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
                 log.close();
             }
         } catch (RuntimeException e) {
-            log.warn("error logging response", e);
-            try {
-                log.close();
-            } catch (RuntimeException e2) {
-                log.warn("error closing log", e2);
-            }
+            log.warn("error logging container response", e);
         }
     }
 

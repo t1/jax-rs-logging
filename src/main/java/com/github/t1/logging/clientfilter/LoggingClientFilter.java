@@ -28,7 +28,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
     public void filter(ClientRequestContext requestContext) {
         var log = getLog(requestContext);
         try {
-            if (log.off()) return;
+            if (log.off()) return; // the OFF logger doesn't have to be closed
             log.debug("sending {} request {}", requestContext.getMethod(), requestContext.getUri());
             requestContext.getStringHeaders().forEach((name, values) -> log.debug(">> {}: {}", name, safe(name, values)));
             if (requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
@@ -39,7 +39,7 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
                     requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
                     requestContext.setEntityStream(stream);
                 } catch (RuntimeException e) {
-                    log.warn("can't read entity stream... will log toString. Cause: {}", e.toString());
+                    log.debug("can't read entity stream... will log toString. Cause: {}", e.toString());
                     log.debug(">> {}", requestContext.getEntity());
                 }
             } else {
@@ -47,18 +47,14 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
                 log.close();
             }
         } catch (RuntimeException e) {
-            log.warn("error logging response", e);
-            try {
-                log.close();
-            } catch (RuntimeException e2) {
-                log.warn("error closing log", e2);
-            }
+            log.warn("error logging client request", e);
         }
     }
 
     @Override
     public void filter(ClientRequestContext requestContext, ClientResponseContext responseContext) throws IOException {
-        try (var log = getLog(requestContext)) {
+        var log = getLog(requestContext);
+        try {
             if (log.off()) return;
             var loggingOutputStream = (LoggingOutputStream) requestContext.getProperty(LOGGING_OUTPUT_STREAM_PROPERTY);
             if (loggingOutputStream != null)
@@ -74,6 +70,14 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
                 var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
                 entity.lines().forEach(line -> log.debug("<< {}", line));
                 responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
+            }
+        } catch (RuntimeException e) {
+            log.warn("error logging client response", e);
+        } finally {
+            try {
+                log.close();
+            } catch (RuntimeException e2) {
+                log.warn("error closing log", e2);
             }
         }
     }

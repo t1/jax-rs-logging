@@ -1,6 +1,7 @@
 package test;
 
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
@@ -36,6 +37,13 @@ public class Ping {
     public String textPing() {
         log.info("got pinged for text");
         return "pong";
+    }
+
+    @GET
+    @Path("/failing")
+    public Payload failing() {
+        log.info("got pinged for failing");
+        throw new BadRequestException("failing");
     }
 
     @AllArgsConstructor
