@@ -5,12 +5,18 @@
         </encoder>
     </appender>
 
-    <root level="debug">
+    <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
     </root>
-    <logger name="org.testcontainers.containers.output" level="INFO"/>
+    <logger name="org.testcontainers" level="INFO"/>
     <logger name="org.jboss.resteasy.resteasy_jaxrs.i18n" level="INFO"/>
     <logger name="com.github.dockerjava.core.command.PullImageResultCallback" level="INFO"/>
     <logger name="com.github.dockerjava.zerodep.shaded" level="INFO"/>
     <logger name="com.github.dockerjava.zerodep.ApacheDockerHttpClientImpl$ApacheResponse" level="INFO"/>
+
+    <logger name="test" level="INFO"/>
+    <logger name="test.A" level="DEBUG"/>
+    <logger name="test.B..single" level="DEBUG"/>
+    <logger name="test.C..single" level="DEBUG"/>
+    <logger name="..single" level="DEBUG"/>
 </configuration>

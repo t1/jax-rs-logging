@@ -12,9 +12,13 @@ public interface LogWrapper extends AutoCloseable {
     static LogWrapper of(String loggerName) {
         var logger = LoggerFactory.getLogger(loggerName);
         if (logger.isDebugEnabled()) return new StandardLogWrapper(logger);
-        logger = LoggerFactory.getLogger(loggerName + SINGLE);
-        if (logger.isDebugEnabled()) return new SingleLogWrapper(logger);
-        return new OffLogWrapper();
+        while (true) {
+            var singleLogger = LoggerFactory.getLogger(loggerName + SINGLE);
+            if (singleLogger.isDebugEnabled()) return new SingleLogWrapper(singleLogger);
+            if (loggerName.isEmpty()) return new OffLogWrapper();
+            int lastDot = loggerName.lastIndexOf('.');
+            loggerName = (lastDot < 0) ? "" : loggerName.substring(0, lastDot);
+        }
     }
 
     default boolean off() {return false;}
@@ -25,8 +29,15 @@ public interface LogWrapper extends AutoCloseable {
 
     default void close() {}
 
-    @RequiredArgsConstructor
+
     class StandardLogWrapper implements LogWrapper {
+        StandardLogWrapper(Logger logger) {
+            assert logger.isDebugEnabled();
+            this.logger = logger;
+        }
+
+        @Override public String toString() {return "STANDARD:" + logger.getName();}
+
         private final Logger logger;
 
         @Override public void debug(String message, Object... args) {logger.debug(message, args);}
@@ -34,8 +45,14 @@ public interface LogWrapper extends AutoCloseable {
         @Override public void warn(String message, Object... args) {logger.warn(message, args);}
     }
 
-    @RequiredArgsConstructor
     class SingleLogWrapper implements LogWrapper {
+        SingleLogWrapper(Logger logger) {
+            assert logger.isDebugEnabled();
+            this.logger = logger;
+        }
+
+        @Override public String toString() {return "SINGLE:" + logger.getName();}
+
         private final Logger logger;
         private final StringBuilder buffer = new StringBuilder();
         private boolean closed = false;
@@ -65,6 +82,8 @@ public interface LogWrapper extends AutoCloseable {
 
     @RequiredArgsConstructor
     class OffLogWrapper implements LogWrapper {
+        @Override public String toString() {return "OFF";}
+
         @Override public boolean off() {return true;}
 
         @Override public void debug(String message, Object... args) {

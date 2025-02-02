@@ -31,6 +31,13 @@ public class Ping {
         return new Payload("pong:" + ((in == null) ? null : in.getPayload()));
     }
 
+    @GET
+    @Produces(TEXT_PLAIN)
+    public String textPing() {
+        log.info("got pinged for text");
+        return "pong";
+    }
+
     @AllArgsConstructor
     @NoArgsConstructor(force = true)
     @Data

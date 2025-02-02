@@ -27,10 +27,14 @@ class SingleLineIT {
     static JeeContainer SERVER = WildflyContainer.create()
             .withDeployment(war("ROOT").withClasses(Ping.class, Ping.Payload.class, Ping.Api.class, REST.class),
                     addLib("target/jax-rs-logging.jar"))
-            .withLogLevel(Ping.class.getName() + ".indirect" + SINGLE, DEBUG) // container/server side
-            .withLogLevel(Ping.class.getName() + ".ping" + SINGLE, DEBUG) // container/server side
-            .withLogLevel(Ping.Api.class.getName() + ".ping" + SINGLE, DEBUG) // client side
-            .withLogLevel(Ping.Api.class.getName() + ".indirect" + SINGLE, DEBUG) // client side
+            // container/server side
+            .withLogLevel(Ping.class.getName() + ".indirect" + SINGLE, DEBUG)
+            .withLogLevel(Ping.class.getName() + ".ping" + SINGLE, DEBUG)
+            .withLogLevel(Ping.class.getName() + SINGLE, DEBUG) // the text ping via the class logger
+            // client side
+            .withLogLevel(Ping.Api.class.getName() + ".ping" + SINGLE, DEBUG)
+            .withLogLevel(Ping.Api.class.getName() + ".indirect" + SINGLE, DEBUG)
+            //
             .withMainPortBoundToFixedPort(8080) // makes manual testing and debugging easier
             .withPortBoundToFixedPort(8787, 8787) // debug
             .withPortBoundToFixedPort(9990, 9990); // management
@@ -61,6 +65,30 @@ class SingleLineIT {
                         """)
                 .contains("<<< {\"payload\":\"pong:test\"}\n");
         then(SERVER.getLogs()).doesNotContain(FOO_BAR);
+    }
+
+    @Test
+    void shouldTextPing() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("text ping {}", webTarget.getUri());
+
+        var pong = webTarget.request()
+                .header(AUTHORIZATION, "Basic " + FOO_BAR)
+                .get()
+                .readEntity(String.class);
+
+        then(pong).isEqualTo("pong");
+        then(SERVER.getLogs()).contains("""
+                        got GET request http://localhost:8080/ping
+                        >>> Authorization: <hidden>
+                        """)
+                .doesNotContain(">>> Accept: ")
+                .contains("got pinged for text")
+                .contains("""
+                        sending response for GET http://localhost:8080/ping
+                        <<< Status: 200 OK
+                        <<< Content-Type: text/plain;charset=UTF-8
+                        """);
     }
 
     @Test

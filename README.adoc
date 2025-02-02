@@ -9,7 +9,7 @@ It logs at `DEBUG` level using https://www.slf4j.org[slf4j].
 It tries to find out what API class was used (or fall back to a generic logger), e.g. when you use MP REST Client, it uses the name of the client API interface as the logger.
 On the server, I didn't find a standardized way to find out what API class handles the request; so that works currently only for RestEasy... any hints are very welcome.
 
-If the logger is not enabled (at `DEBUG` level), it looks for a logger config with an additional `..single` suffix, i.e. if the method is `test.Ping#ping` and `test.Ping.ping` is disabled, it looks if `test.Ping.ping..single` is enabled.
+If the logger is not enabled (at `DEBUG` level), it looks for a logger config with an additional `..single` suffix, i.e. if the method is `test.Ping#ping` and `test.Ping.ping` is disabled, it looks if `test.Ping.ping..single` or `test.Ping..single` or `test..single` or `..single` or the root logger is enabled.
 In this case, it logs the request and response in a single multi-line log invocation.
 If that is still disabled, it logs nothing.
 
