@@ -4,21 +4,32 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Function;
+
 import static com.github.t1.logging.clientfilter.LoggingTools.SINGLE;
 import static com.github.t1.logging.clientfilter.LoggingTools.format;
 
 /// Can be standard, single, or off.
 public interface LogWrapper extends AutoCloseable {
     static LogWrapper of(String loggerName) {
-        var logger = LoggerFactory.getLogger(loggerName);
-        if (logger.isDebugEnabled()) return new StandardLogWrapper(logger);
+        return of(loggerName, LoggerFactory::getLogger);
+    }
+
+    static LogWrapper of(String loggerName, Function<String, Logger> loggerFactory) {
         while (true) {
-            var singleLogger = LoggerFactory.getLogger(loggerName + SINGLE);
-            if (singleLogger.isDebugEnabled()) return new SingleLogWrapper(singleLogger);
+            var singleLogger = loggerFactory.apply(loggerName + SINGLE);
+            var logger = loggerFactory.apply(loggerName);
+            if (singleLogger.isDebugEnabled() && !logger.isDebugEnabled()) return new SingleLogWrapper(singleLogger);
+            if (logger.isDebugEnabled()) return new StandardLogWrapper(logger);
             if (loggerName.isEmpty()) return new OffLogWrapper();
-            int lastDot = loggerName.lastIndexOf('.');
-            loggerName = (lastDot < 0) ? "" : loggerName.substring(0, lastDot);
+            loggerName = parentLogger(loggerName);
         }
+    }
+
+    static String parentLogger(String loggerName) {
+        int lastDot = loggerName.lastIndexOf('.');
+        loggerName = (lastDot < 0) ? "" : loggerName.substring(0, lastDot);
+        return loggerName;
     }
 
     default boolean off() {return false;}
