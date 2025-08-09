@@ -68,7 +68,7 @@ class InContainerIT {
     @ValueSource(strings = {"Authorization", "authorization", "AUTHORIZATION", "AuThOrIzAtIoN"})
     void shouldLogTheUserNameWhenThePasswordIsLong(String authorizationHeaderName) {
         var webTarget = SERVER.target().path("ping");
-        log.debug("ping {}", webTarget.getUri());
+        log.debug("ping with long password {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
                 .header(authorizationHeaderName, LONG_AUTH)
@@ -83,7 +83,7 @@ class InContainerIT {
     @Test
     void shouldLogRepeatedHeader() {
         var webTarget = SERVER.target().path("ping");
-        log.debug("ping {}", webTarget.getUri());
+        log.debug("ping with repeated header {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
                 .header("Foo", "bar")
@@ -99,7 +99,7 @@ class InContainerIT {
     @Test
     void shouldLogTrimmedHeader() {
         var webTarget = SERVER.target().path("ping");
-        log.debug("ping {}", webTarget.getUri());
+        log.debug("ping with trimmed header {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE)
                 .header("Foo", " bar ")
@@ -118,7 +118,7 @@ class InContainerIT {
         var pong = webTarget.request(TEXT_PLAIN_TYPE).get(String.class);
 
         then(pong).isEqualTo("indirect:pong:indirect");
-        thenLogsIn(SERVER).thread("default task-1")
+        thenLogsIn(SERVER).thread("default task-2")
                 .hasFollowing(LogLine.message("got GET request http://localhost:8080/ping/indirect").withLogger("test.Ping.indirect"))
                 .hasFollowing(LogLine.message(">>> Accept: text/plain").withLogger("test.Ping.indirect"))
                 //
@@ -139,7 +139,7 @@ class InContainerIT {
                 .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.indirect"))
                 .hasFollowing(LogLine.message("<<< Content-Type: text/plain;charset=UTF-8").withLogger("test.Ping.indirect"))
                 .hasFollowing(LogLine.message("<<< indirect:pong:indirect").withLogger("test.Ping.indirect"));
-        thenLogsIn(SERVER).thread("default task-2")
+        thenLogsIn(SERVER).thread("default task-3")
                 .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Accept: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message(">>> Content-Type: application/json").withLogger("test.Ping.ping"))
@@ -156,7 +156,7 @@ class InContainerIT {
     @Test
     void shouldPingWithoutAcceptHeader() {
         var webTarget = SERVER.target().path("ping");
-        log.debug("ping {}", webTarget.getUri());
+        log.debug("ping without accept header {}", webTarget.getUri());
 
         var pong = webTarget.request()
                 .post(json(new Ping.Payload("test")))
@@ -178,7 +178,7 @@ class InContainerIT {
     @Test
     void shouldPingWithCharset() {
         var webTarget = SERVER.target().path("ping");
-        log.debug("ping {}", webTarget.getUri());
+        log.debug("ping with charset {}", webTarget.getUri());
 
         var pong = webTarget.request(APPLICATION_JSON_TYPE.withCharset("UTF-8"))
                 .post(json(new Ping.Payload("test")))

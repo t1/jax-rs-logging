@@ -102,40 +102,40 @@ class SingleLineIT {
         // which happens after the server-side has sent the response... looks weird, but is correct
         then(SERVER.getLogs())
                 .contains("""
-                        DEBUG [test.Ping.indirect..single] (default task-1) got GET request http://localhost:8080/ping/indirect
+                        DEBUG [test.Ping.indirect..single] (default task-2) got GET request http://localhost:8080/ping/indirect
                         >>> Accept: text/plain
                         """)
-                .contains("INFO  [test.Ping] (default task-1) got indirect")
+                .contains("INFO  [test.Ping] (default task-2) got indirect")
                 .contains("""
-                        DEBUG [test.Ping.ping..single] (default task-2) got POST request http://localhost:8080/ping
+                        DEBUG [test.Ping.ping..single] (default task-3) got POST request http://localhost:8080/ping
                         >>> Accept: application/json
                         >>> Authorization: foo:<hidden>
                         """)
                 .contains(">>> Content-Type: application/json")
                 .contains(">>> {\"payload\":\"indirect\"}")
-                .contains("INFO  [test.Ping] (default task-2) got pinged Ping.Payload(payload=indirect)")
+                .contains("INFO  [test.Ping] (default task-3) got pinged Ping.Payload(payload=indirect)")
                 .contains("""
-                        DEBUG [test.Ping.ping..single] (default task-2) sending response for POST http://localhost:8080/ping
+                        DEBUG [test.Ping.ping..single] (default task-3) sending response for POST http://localhost:8080/ping
                         <<< Status: 200 OK
                         <<< Content-Type: application/json
                         <<< {"payload":"pong:indirect"}
                         """)
                 .contains("""
-                        DEBUG [test.Ping$Api.ping..single] (default task-1) sending POST request http://localhost:8080/ping
+                        DEBUG [test.Ping$Api.ping..single] (default task-2) sending POST request http://localhost:8080/ping
                         >> Accept: application/json
                         >> Authorization: foo:<hidden>
                         >> Content-Type: application/json
                         >> {"payload":"indirect"}
                         """)
                 .contains("""
-                        DEBUG [test.Ping$Api.ping..single] (default task-1) got response for POST http://localhost:8080/ping
+                        DEBUG [test.Ping$Api.ping..single] (default task-2) got response for POST http://localhost:8080/ping
                         << Status: 200 OK
                         << Connection: keep-alive
                         << Content-Type: application/json
                         """)
                 .contains("<< {\"payload\":\"pong:indirect\"}")
                 .contains("""
-                        DEBUG [test.Ping.indirect..single] (default task-1) sending response for GET http://localhost:8080/ping/indirect
+                        DEBUG [test.Ping.indirect..single] (default task-2) sending response for GET http://localhost:8080/ping/indirect
                         <<< Status: 200 OK
                         <<< Content-Type: text/plain;charset=UTF-8
                         <<< indirect:pong:indirect
