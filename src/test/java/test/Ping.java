@@ -17,7 +17,9 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Path("/ping")
 @Slf4j
@@ -39,6 +41,14 @@ public class Ping {
         return "pong";
     }
 
+    @POST
+    @Consumes(APPLICATION_OCTET_STREAM)
+    @Produces(APPLICATION_OCTET_STREAM)
+    public byte[] binaryPing(byte[] in) {
+        log.info("got binary pinged: {}", new String(in, UTF_8));
+        return "binary-pong".getBytes(UTF_8);
+    }
+
     @GET
     @Path("/failing")
     public Payload failing() {
@@ -57,6 +67,11 @@ public class Ping {
     public interface Api {
         @POST
         Payload ping(@HeaderParam(AUTHORIZATION) String auth, Payload in);
+
+        @POST
+        @Consumes(APPLICATION_OCTET_STREAM)
+        @Produces(APPLICATION_OCTET_STREAM)
+        byte[] binaryPing(@HeaderParam(AUTHORIZATION) String auth, byte[] in);
     }
 
     @Inject
@@ -69,5 +84,16 @@ public class Ping {
     public String indirect() {
         log.info("got indirect");
         return "indirect:" + api.ping(LONG_AUTH, new Payload("indirect")).payload;
+    }
+
+    @Path("/indirect")
+    @POST
+    @Consumes(APPLICATION_OCTET_STREAM)
+    @Produces(APPLICATION_OCTET_STREAM)
+    public byte[] binaryIndirect(byte[] in) {
+        log.info("got binary indirect: {}", new String(in, UTF_8));
+        var indirect = new String(api.binaryPing(LONG_AUTH, "indirect".getBytes(UTF_8)), UTF_8);
+        log.info("got binary indirect response: {}", indirect);
+        return ("indirect:binary:" + indirect).getBytes(UTF_8);
     }
 }

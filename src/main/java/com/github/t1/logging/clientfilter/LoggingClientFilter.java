@@ -31,16 +31,21 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
             if (log.off()) return; // the OFF logger doesn't have to be closed
             log.debug("sending {} request {}", requestContext.getMethod(), requestContext.getUri());
             requestContext.getStringHeaders().forEach((name, values) -> log.debug(">> {}: {}", name, safe(name, values)));
-            if (requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
-                // if we need to log the entity, we close the log when the stream is closed
-                try {
-                    var entityStream = requestContext.getEntityStream();
-                    OutputStream stream = new LoggingOutputStream(entityStream, ">>", log, log::close);
-                    requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
-                    requestContext.setEntityStream(stream);
-                } catch (RuntimeException e) {
-                    log.debug("can't read entity stream... will log toString. Cause: {}", e.toString());
-                    log.debug(">> {}", requestContext.getEntity());
+            if (requestContext.hasEntity()) {
+                if (isLoggable(requestContext.getMediaType())) {
+                    // if we need to log the entity, we close the log when the stream is closed
+                    try {
+                        var entityStream = requestContext.getEntityStream();
+                        OutputStream stream = new LoggingOutputStream(entityStream, ">>", log, log::close);
+                        requestContext.setProperty(LOGGING_OUTPUT_STREAM_PROPERTY, stream);
+                        requestContext.setEntityStream(stream);
+                    } catch (RuntimeException e) {
+                        log.debug("can't read entity stream... will log toString. Cause: {}", e.toString());
+                        log.debug(">> {}", requestContext.getEntity());
+                    }
+                } else {
+                    log.debug(">> <binary data>");
+                    log.close();
                 }
             } else {
                 // otherwise we close it right away
@@ -65,11 +70,15 @@ public class LoggingClientFilter implements ClientRequestFilter, ClientResponseF
             var headers = responseContext.getHeaders();
             if (headers != null)
                 headers.forEach((name, values) -> log.debug("<< {}: {}", name, merge(values)));
-            if (responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
-                var charset = LoggingTools.charset(responseContext.getMediaType());
-                var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
-                entity.lines().forEach(line -> log.debug("<< {}", line));
-                responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
+            if (responseContext.hasEntity()) {
+                if (isLoggable(responseContext.getMediaType())) {
+                    var charset = LoggingTools.charset(responseContext.getMediaType());
+                    var entity = new String(responseContext.getEntityStream().readAllBytes(), charset);
+                    entity.lines().forEach(line -> log.debug("<< {}", line));
+                    responseContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
+                } else {
+                    log.debug("<< <binary data>");
+                }
             }
         } catch (RuntimeException e) {
             log.warn("error logging client response", e);

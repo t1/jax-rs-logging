@@ -40,7 +40,7 @@ class SingleLineIT {
             .withPortBoundToFixedPort(9990, 9990); // management
 
     @Test
-    void shouldPing() {
+    void shouldPingJson() {
         var webTarget = SERVER.target().path("ping");
         log.debug("ping {}", webTarget.getUri());
 
@@ -68,11 +68,11 @@ class SingleLineIT {
     }
 
     @Test
-    void shouldTextPing() {
+    void shouldPingText() {
         var webTarget = SERVER.target().path("ping");
         log.debug("text ping {}", webTarget.getUri());
 
-        var pong = webTarget.request()
+        var pong = webTarget.request(TEXT_PLAIN_TYPE)
                 .header(AUTHORIZATION, "Basic " + FOO_BAR)
                 .get()
                 .readEntity(String.class);
@@ -80,9 +80,9 @@ class SingleLineIT {
         then(pong).isEqualTo("pong");
         then(SERVER.getLogs()).contains("""
                         got GET request http://localhost:8080/ping
+                        >>> Accept: text/plain
                         >>> Authorization: <hidden>
                         """)
-                .doesNotContain(">>> Accept: ")
                 .contains("got pinged for text")
                 .contains("""
                         sending response for GET http://localhost:8080/ping

@@ -4,6 +4,9 @@
 
 Log all http traffic coming in or going out with JAX-RS, i.e. request/status, headers and (text)body coming in and returned by a server as well as sending out and receiving back by a client.
 
+It tries to find out, if the body is text or binary, and only logs text bodies.
+The heuristic is simple: if the `Content-Type` starts with `text/` or ends with `/json`, `+json`, `/xml`, `+xml`, `/yaml`, or `+yaml`, it is considered text; otherwise binary.
+
 It logs at `DEBUG` level using https://www.slf4j.org[slf4j].
 
 It tries to find out what API class was used (or fall back to a generic logger), e.g. when you use MP REST Client, it uses the name of the client API interface as the logger.

@@ -10,7 +10,6 @@ import java.util.Optional;
 
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.CHARSET_PARAMETER;
-import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 
 public class LoggingTools {
@@ -51,14 +50,14 @@ public class LoggingTools {
 
     static boolean isLoggable(MediaType mediaType) {
         if (mediaType == null) return false;
-        return isApplication(mediaType, "json")
-               || isApplication(mediaType, "xml")
-               || mediaType.isCompatible(TEXT_PLAIN_TYPE);
+        return mediaType.getType().equals("text")
+               || is(mediaType, "json")
+               || is(mediaType, "yaml")
+               || is(mediaType, "xml");
     }
 
-    private static boolean isApplication(MediaType mediaType, String subType) {
-        return mediaType.getType().equals("application")
-               && (mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType));
+    private static boolean is(MediaType mediaType, String subType) {
+        return mediaType.getSubtype().equals(subType) || mediaType.getSubtype().endsWith("+" + subType);
     }
 
     static Charset charset(MediaType mediaType) {

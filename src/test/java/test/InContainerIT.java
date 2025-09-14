@@ -12,9 +12,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static com.github.t1.testcontainers.jee.AddLibMod.addLib;
 import static com.github.t1.testcontainers.tools.DeployableBuilder.war;
+import static jakarta.ws.rs.client.Entity.entity;
 import static jakarta.ws.rs.client.Entity.json;
 import static jakarta.ws.rs.core.HttpHeaders.AUTHORIZATION;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
+import static jakarta.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE;
 import static jakarta.ws.rs.core.MediaType.TEXT_PLAIN_TYPE;
 import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.assertj.core.api.BDDAssertions.then;
@@ -61,6 +63,31 @@ class InContainerIT {
                 .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:test\"}").withLogger("test.Ping.ping"));
+        then(SERVER.getLogs()).doesNotContain(FOO_BAR);
+    }
+
+    @Test
+    void shouldPingBinary() {
+        var webTarget = SERVER.target().path("ping");
+        log.debug("binary ping {}", webTarget.getUri());
+
+        var pong = webTarget.request(APPLICATION_OCTET_STREAM_TYPE)
+                .header(AUTHORIZATION, "Basic " + FOO_BAR)
+                .post(entity("ping".getBytes(), APPLICATION_OCTET_STREAM_TYPE))
+                .readEntity(String.class);
+
+        then(pong).isEqualTo("binary-pong");
+        thenLogsIn(SERVER)
+                .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> Accept: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> Authorization: <hidden>").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> Content-Type: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> <binary data>").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("got binary pinged: ping").withLevel(INFO).withLogger(Ping.class.getName()))
+                .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< Content-Type: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< <binary data>").withLogger("test.Ping.binaryPing"));
         then(SERVER.getLogs()).doesNotContain(FOO_BAR);
     }
 
@@ -151,6 +178,54 @@ class InContainerIT {
                 .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< Content-Type: application/json").withLogger("test.Ping.ping"))
                 .hasFollowing(LogLine.message("<<< {\"payload\":\"pong:indirect\"}").withLogger("test.Ping.ping"));
+    }
+
+    @Test
+    void shouldPingIndirectBinary() {
+        var webTarget = SERVER.target().path("ping/indirect");
+        log.debug("indirect binary ping: {}", webTarget.getUri());
+        var pong = webTarget.request(APPLICATION_OCTET_STREAM_TYPE)
+                .post(entity("ping-indirect".getBytes(), APPLICATION_OCTET_STREAM_TYPE))
+                .readEntity(String.class);
+
+        then(pong).isEqualTo("indirect:binary:binary-pong");
+        thenLogsIn(SERVER).thread("default task-2")
+                .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping/indirect").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message(">>> Accept: application/octet-stream").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message(">>> Content-Type: application/octet-stream").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message(">>> <binary data>").withLogger("test.Ping.binaryIndirect"))
+                //
+                .hasFollowing(LogLine.message("got binary indirect: ping-indirect").withLogger("test.Ping"))
+                //
+                .hasFollowing(LogLine.message("sending POST request http://localhost:8080/ping").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message(">> Accept: application/octet-stream").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message(">> Authorization: foo:<hidden>").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message(">> Content-Type: application/octet-stream").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message(">> <binary data>").withLogger("test.Ping$Api.binaryPing"))
+                //
+                .hasFollowing(LogLine.message("got response for POST http://localhost:8080/ping").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message("<< Status: 200 OK").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message("<< Content-Type: application/octet-stream").withLogger("test.Ping$Api.binaryPing"))
+                .hasFollowing(LogLine.message("<< <binary data>").withLogger("test.Ping$Api.binaryPing"))
+                //
+                .hasFollowing(LogLine.message("got binary indirect response: binary-pong").withLogger("test.Ping"))
+                //
+                .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping/indirect").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message("<<< Content-Type: application/octet-stream").withLogger("test.Ping.binaryIndirect"))
+                .hasFollowing(LogLine.message("<<< <binary data>").withLogger("test.Ping.binaryIndirect"));
+        thenLogsIn(SERVER).thread("default task-3")
+                .hasFollowing(LogLine.message("got POST request http://localhost:8080/ping").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> Accept: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> Content-Type: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message(">>> <binary data>").withLogger("test.Ping.binaryPing"))
+                //
+                .hasFollowing(LogLine.message("got binary pinged: indirect").withLogger("test.Ping"))
+                //
+                .hasFollowing(LogLine.message("sending response for POST http://localhost:8080/ping").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< Status: 200 OK").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< Content-Type: application/octet-stream").withLogger("test.Ping.binaryPing"))
+                .hasFollowing(LogLine.message("<<< <binary data>").withLogger("test.Ping.binaryPing"));
     }
 
     @Test

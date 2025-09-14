@@ -26,11 +26,15 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
             if (log.off()) return;
             log.debug("got {} request {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
             requestContext.getHeaders().forEach((name, values) -> log.debug(">>> {}: {}", name, safe(name, values)));
-            if (requestContext.hasEntity() && isLoggable(requestContext.getMediaType())) {
-                var charset = LoggingTools.charset(requestContext.getMediaType());
-                var entity = new String(requestContext.getEntityStream().readAllBytes(), charset);
-                entity.lines().forEach(line -> log.debug(">>> {}", line));
-                requestContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
+            if (requestContext.hasEntity()) {
+                if (isLoggable(requestContext.getMediaType())) {
+                    var charset = LoggingTools.charset(requestContext.getMediaType());
+                    var entity = new String(requestContext.getEntityStream().readAllBytes(), charset);
+                    entity.lines().forEach(line -> log.debug(">>> {}", line));
+                    requestContext.setEntityStream(new ByteArrayInputStream(entity.getBytes(charset)));
+                } else {
+                    log.debug(">>> <binary data>");
+                }
             }
         } catch (RuntimeException e) {
             log.warn("error logging container request", e);
@@ -51,9 +55,14 @@ public class LoggingContainerFilter implements ContainerRequestFilter, Container
             log.debug("sending response for {} {}", requestContext.getMethod(), requestContext.getUriInfo().getRequestUri());
             log.debug("<<< Status: {} {}", responseContext.getStatus(), responseContext.getStatusInfo().getReasonPhrase());
             responseContext.getStringHeaders().forEach((name, values) -> log.debug("<<< {}: {}", name, merge(values)));
-            if (responseContext.hasEntity() && isLoggable(responseContext.getMediaType())) {
-                // if we need to log the entity, we close the log when the stream is closed
-                responseContext.setEntityStream(new LoggingOutputStream(responseContext.getEntityStream(), "<<<", log, log::close));
+            if (responseContext.hasEntity()) {
+                if (isLoggable(responseContext.getMediaType())) {
+                    // if we need to log the entity, we close the log when the stream is closed
+                    responseContext.setEntityStream(new LoggingOutputStream(responseContext.getEntityStream(), "<<<", log, log::close));
+                } else {
+                    log.debug("<<< <binary data>");
+                    log.close();
+                }
             } else {
                 // otherwise we close it right away
                 log.close();
