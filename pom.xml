@@ -20,7 +20,7 @@
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
 
         <surefire.version>3.5.4</surefire.version>
-        <resteasy.version>6.2.12.Final</resteasy.version>
+        <resteasy.version>6.2.14.Final</resteasy.version>
     </properties>
 
     <scm>
