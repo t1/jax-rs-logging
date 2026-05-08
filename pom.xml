@@ -16,7 +16,7 @@
         <project.reporting.outputEncoding>utf-8</project.reporting.outputEncoding>
 
         <surefire.version>3.5.5</surefire.version>
-        <resteasy.version>7.0.1.Final</resteasy.version>
+        <resteasy.version>7.0.2.Final</resteasy.version>
         <lombok.version>1.18.46</lombok.version>
     </properties>
 
